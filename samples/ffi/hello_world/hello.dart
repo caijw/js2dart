@@ -5,8 +5,10 @@
 import 'dart:ffi' as ffi;
 
 // FFI signature of the hello_world C function
+// c 函数签名定义
 typedef hello_world_func = ffi.Void Function();
 // Dart type definition for calling the C foreign function
+// Dart 的 函数类型定义
 typedef HelloWorld = void Function();
 
 main() {
