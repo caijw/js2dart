@@ -1,3 +1,11 @@
 {
-    "cquery.cacheDirectory": "${workspaceFolder}/.vscode/cquery_cached_index/"
+    "cquery.cacheDirectory": "${workspaceFolder}/.vscode/cquery_cached_index/",
+    "files.associations": {
+        "*.cjson": "jsonc",
+        "*.wxss": "css",
+        "*.wxs": "javascript",
+        "quickjs.h": "c",
+        "quickjs-libc.h": "c",
+        "hello.h": "c"
+    }
 }
