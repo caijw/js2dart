@@ -16,6 +16,6 @@ dylib: hello_world.o
 	gcc -dynamiclib -undefined suppress -flat_namespace hello_world.o -o ../hello_world.dylib $(LIBS)
 
 clean:
-	rm ./myAsyncScript
-	rm myAsyncScript.c
-	rm -rf $(OBJDIR)
+	rm ./hello_world.o
+	rm ./hello_world.o.d
+	rm ../hello_world.dylib
