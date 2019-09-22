@@ -22,6 +22,11 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+
+/**
+ * 定义了 os 和 std 模块
+ */
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
@@ -2608,7 +2613,7 @@ static int js_os_init(JSContext *ctx, JSModuleDef *m)
     return JS_SetModuleExportList(ctx, m, js_os_funcs,
                                   countof(js_os_funcs));
 }
-
+// os 模块的入口
 JSModuleDef *js_init_module_os(JSContext *ctx, const char *module_name)
 {
     JSModuleDef *m;
