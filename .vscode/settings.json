@@ -6,6 +6,7 @@
         "*.wxs": "javascript",
         "quickjs.h": "c",
         "quickjs-libc.h": "c",
-        "hello.h": "c"
+        "hello.h": "c",
+        "jscore.h": "c"
     }
 }

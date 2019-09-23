@@ -2,7 +2,7 @@
  * @Author: kingweicai 
  * @Date: 2019-09-22 23:20:57 
  * @Last Modified by: kingweicai
- * @Last Modified time: 2019-09-23 14:39:17
+ * @Last Modified time: 2019-09-23 15:34:41
  */
 
 #include <quickjs/quickjs.h>
@@ -15,75 +15,33 @@ enum {
     TRUE = 1,
 };
 
-const uint32_t qjsc_hello_size = 87;
+const char greeting_code[] = "console.log('hello world');";
 
-const uint8_t qjsc_hello[87] = {
- 0x01, 0x04, 0x0e, 0x63, 0x6f, 0x6e, 0x73, 0x6f,
- 0x6c, 0x65, 0x06, 0x6c, 0x6f, 0x67, 0x16, 0x48,
- 0x65, 0x6c, 0x6c, 0x6f, 0x20, 0x57, 0x6f, 0x72,
- 0x6c, 0x64, 0x22, 0x65, 0x78, 0x61, 0x6d, 0x70,
- 0x6c, 0x65, 0x73, 0x2f, 0x68, 0x65, 0x6c, 0x6c,
- 0x6f, 0x2e, 0x6a, 0x73, 0x0d, 0x00, 0x06, 0x00,
- 0x9e, 0x01, 0x00, 0x01, 0x00, 0x03, 0x00, 0x00,
- 0x14, 0x01, 0xa0, 0x01, 0x00, 0x00, 0x00, 0x39,
- 0xd0, 0x00, 0x00, 0x00, 0x43, 0xd1, 0x00, 0x00,
- 0x00, 0x04, 0xd2, 0x00, 0x00, 0x00, 0x24, 0x01,
- 0x00, 0xcc, 0x28, 0xa6, 0x03, 0x01, 0x00,
-};
-
-
-const char filename[] = "test.js";
-const char greeting_code[] = "console.log('hello world', 1);";
-
-
-
-static int eval_buf_1(JSContext *ctx, const void *buf, int buf_len,
-                    const char *filename, int eval_flags)
-{
-    JSValue val;
-    int ret;
-
+static int eval_buf_1(JSContext *ctx, const void *buf, int buf_len, const char *filename, int eval_flags, JSValue *val) {
+    int ret = 0;
     if ((eval_flags & JS_EVAL_TYPE_MASK) == JS_EVAL_TYPE_MODULE) {
         /* for the modules, we compile then run to be able to set
            import.meta */
-        val = JS_Eval(ctx, buf, buf_len, filename,
-                      eval_flags | JS_EVAL_FLAG_COMPILE_ONLY);
-        if (!JS_IsException(val)) {
-            js_module_set_import_meta(ctx, val, TRUE, TRUE);
-            val = JS_EvalFunction(ctx, val);
+        *val = JS_Eval(ctx, buf, buf_len, filename, eval_flags | JS_EVAL_FLAG_COMPILE_ONLY);
+        if (!JS_IsException(*val)) {
+            js_module_set_import_meta(ctx, *val, TRUE, TRUE);
+            *val = JS_EvalFunction(ctx, *val);
         }
     } else {
-        val = JS_Eval(ctx, buf, buf_len, filename, eval_flags);
+        *val = JS_Eval(ctx, buf, buf_len, filename, eval_flags);
     }
-    if (JS_IsException(val)) {
-        js_std_dump_error(ctx);
-        ret = -1;
-    } else {
-        ret = 0;
-    }
-    JS_FreeValue(ctx, val);
     return ret;
 }
 
 /**
- * 翻转字符串，返回翻转后的结果
+ * 运行一段 hello world 的 js 代码
  */
-char *reverse(char *str, int length){
-    char *reversed_str = (char *)malloc((length + 1) * sizeof(char));
-    for (int i = 0; i < length; i++)
-    {
-        reversed_str[length - i - 1] = str[i];
-    }
-    reversed_str[length] = '\0';
-    return reversed_str;
-}
-
 void hello_world() {
     int argc = 0;
     char *argv[1] = {NULL};
     JSRuntime *rt;
     JSContext *ctx;
-
+    JSValue val;
     //int eval_flags = JS_EVAL_TYPE_GLOBAL;
     int ret;
     rt = JS_NewRuntime();
@@ -105,10 +63,57 @@ void hello_world() {
     // }
 
     // eval script
-    ret = eval_buf_1(ctx, greeting_code, strlen(greeting_code), "test.js", JS_EVAL_TYPE_GLOBAL);
-
+    ret = eval_buf_1(ctx, greeting_code, strlen(greeting_code), "test.js", JS_EVAL_TYPE_GLOBAL, &val);
+    if (JS_IsException(val)) {
+        js_std_dump_error(ctx);
+    }
+    JS_FreeValue(ctx, val);
     js_std_loop(ctx);
     js_std_free_handlers(rt);
     JS_FreeContext(ctx);
     JS_FreeRuntime(rt);
+}
+
+/**
+ * 翻转字符串，返回翻转后的结果
+ */
+char *reverse(char *str, int length){
+    char *reversed_str = (char *)malloc((length + 1) * sizeof(char));
+    for (int i = 0; i < length; i++)
+    {
+        reversed_str[length - i - 1] = str[i];
+    }
+    reversed_str[length] = '\0';
+    return reversed_str;
+}
+
+/**
+ * 运行 dart 传过来的 js 代码，同时返回一个 char * 的运行结果
+ */
+char *runJs(char *str, int length) {
+    int argc = 0;
+    char *argv[1] = {NULL};
+    int ret;
+    char *ret_str = "";
+    JSRuntime *rt; // 可以放到全局，不需要每次都新建一个 runtime
+    JSContext *ctx;
+    JSValue val;
+    rt = JS_NewRuntime();
+    ctx = JS_NewContext(rt);
+    js_std_add_helpers(ctx, argc, argv);
+    ret = eval_buf_1(ctx, str, length, "qxs.js", JS_EVAL_TYPE_GLOBAL, &val); // 需要处理 ret 非0
+    if (JS_IsException(val)) {
+        js_std_dump_error(ctx);
+        return ret_str;
+    }
+    const char *valStr = JS_ToCString(ctx, val);
+    int valStrLen = strlen(valStr);
+    ret_str = (char *)malloc((valStrLen + 1) * sizeof(char));
+    strcpy(ret_str, valStr);
+    JS_FreeValue(ctx, val);
+    js_std_loop(ctx);
+    js_std_free_handlers(rt);
+    JS_FreeContext(ctx);
+    JS_FreeRuntime(rt);
+    return ret_str;
 }
