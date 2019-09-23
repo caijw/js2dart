@@ -2,7 +2,7 @@
  * @Author: kingweicai 
  * @Date: 2019-09-22 23:04:01 
  * @Last Modified by: kingweicai
- * @Last Modified time: 2019-09-23 15:35:44
+ * @Last Modified time: 2019-09-23 15:38:34
  */
 
 
@@ -48,6 +48,7 @@ typedef Reverse = ffi.Pointer<Utf8> Function(ffi.Pointer<Utf8> str, int length);
 typedef runJs_func = ffi.Pointer<Utf8> Function(ffi.Pointer<Utf8> str, ffi.Int32 length);
 typedef RunJs = ffi.Pointer<Utf8> Function(ffi.Pointer<Utf8> str, int length);
 
+// qxs 的代码，需要构造出来
 final qxsCode = '''
   (function test(a, b) {
     a = a || "1";
@@ -61,19 +62,21 @@ final qxsCode = '''
 ''';
 
 main() {
+
   // Open the dynamic library
   final jscore = ffi.DynamicLibrary.open('jscore.dylib');
-  // Look up the C function 'hello_world'
+
+  // dart 调用 jscore 运行一段 hello world 的 js 代码
   final HelloWorld hello = jscore.lookup<ffi.NativeFunction<hello_world_func>>('hello_world').asFunction();
-  // Call the function
   hello();
 
+  // dart 传递字符串给 c，c 反转字符串后返回给 dart
   final reversePointer = jscore.lookup<ffi.NativeFunction<reverse_func>>('reverse');
   final reverse = reversePointer.asFunction<Reverse>();
   final reversedMessage = Utf8.fromUtf8(reverse(Utf8.toUtf8('backwards'), 9));
   print('reversedMessage $reversedMessage');
 
-  // 运行 qxs 的 js 代码
+  // dart 调用 jscore 运行 qxs 的 js 代码
   final runJsPointer = jscore.lookup<ffi.NativeFunction<runJs_func>>('runJs');
   final runJs = runJsPointer.asFunction<RunJs>();
   final qxsRes = Utf8.fromUtf8(runJs(Utf8.toUtf8(qxsCode), qxsCode.length));
