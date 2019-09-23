@@ -2,12 +2,12 @@
  * @Author: kingweicai 
  * @Date: 2019-09-22 23:20:57 
  * @Last Modified by: kingweicai
- * @Last Modified time: 2019-09-23 13:08:45
+ * @Last Modified time: 2019-09-23 14:39:17
  */
 
 #include <quickjs/quickjs.h>
 #include <quickjs/quickjs-libc.h>
-#include "hello_world.h"
+#include "jscore.h"
 #include <string.h>
 
 enum {
