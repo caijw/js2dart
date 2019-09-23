@@ -2,12 +2,18 @@
  * @Author: kingweicai 
  * @Date: 2019-09-22 23:20:57 
  * @Last Modified by: kingweicai
- * @Last Modified time: 2019-09-22 23:24:04
+ * @Last Modified time: 2019-09-23 13:08:45
  */
 
 #include <quickjs/quickjs.h>
 #include <quickjs/quickjs-libc.h>
 #include "hello_world.h"
+#include <string.h>
+
+enum {
+    FALSE = 0,
+    TRUE = 1,
+};
 
 const uint32_t qjsc_hello_size = 87;
 
@@ -25,17 +31,84 @@ const uint8_t qjsc_hello[87] = {
  0x00, 0xcc, 0x28, 0xa6, 0x03, 0x01, 0x00,
 };
 
+
+const char filename[] = "test.js";
+const char greeting_code[] = "console.log('hello world', 1);";
+
+
+
+static int eval_buf_1(JSContext *ctx, const void *buf, int buf_len,
+                    const char *filename, int eval_flags)
+{
+    JSValue val;
+    int ret;
+
+    if ((eval_flags & JS_EVAL_TYPE_MASK) == JS_EVAL_TYPE_MODULE) {
+        /* for the modules, we compile then run to be able to set
+           import.meta */
+        val = JS_Eval(ctx, buf, buf_len, filename,
+                      eval_flags | JS_EVAL_FLAG_COMPILE_ONLY);
+        if (!JS_IsException(val)) {
+            js_module_set_import_meta(ctx, val, TRUE, TRUE);
+            val = JS_EvalFunction(ctx, val);
+        }
+    } else {
+        val = JS_Eval(ctx, buf, buf_len, filename, eval_flags);
+    }
+    if (JS_IsException(val)) {
+        js_std_dump_error(ctx);
+        ret = -1;
+    } else {
+        ret = 0;
+    }
+    JS_FreeValue(ctx, val);
+    return ret;
+}
+
+/**
+ * 翻转字符串，返回翻转后的结果
+ */
+char *reverse(char *str, int length){
+    char *reversed_str = (char *)malloc((length + 1) * sizeof(char));
+    for (int i = 0; i < length; i++)
+    {
+        reversed_str[length - i - 1] = str[i];
+    }
+    reversed_str[length] = '\0';
+    return reversed_str;
+}
+
 void hello_world() {
     int argc = 0;
     char *argv[1] = {NULL};
     JSRuntime *rt;
     JSContext *ctx;
+
+    //int eval_flags = JS_EVAL_TYPE_GLOBAL;
+    int ret;
     rt = JS_NewRuntime();
-    ctx = JS_NewContextRaw(rt);
-    JS_AddIntrinsicBaseObjects(ctx);
+    ctx = JS_NewContext(rt);
+    /* loader for ES6 modules */
+    // JS_SetModuleLoaderFunc(rt, NULL, js_module_loader, NULL);
     js_std_add_helpers(ctx, argc, argv);
-    js_std_eval_binary(ctx, qjsc_hello, qjsc_hello_size, 0);
+
+    /* system modules */
+    // js_init_module_std(ctx, "std");
+    // js_init_module_os(ctx, "os");
+    /* make 'std' and 'os' visible to non module code */
+    // if (1) {
+    //     const char *str = "import * as std from 'std';\n"
+    //         "import * as os from 'os';\n"
+    //         "globalThis.std = std;\n"
+    //         "globalThis.os = os;\n";
+    //     eval_buf_1(ctx, str, strlen(str), "<input>", JS_EVAL_TYPE_MODULE);
+    // }
+
+    // eval script
+    ret = eval_buf_1(ctx, greeting_code, strlen(greeting_code), "test.js", JS_EVAL_TYPE_GLOBAL);
+
     js_std_loop(ctx);
+    js_std_free_handlers(rt);
     JS_FreeContext(ctx);
     JS_FreeRuntime(rt);
 }

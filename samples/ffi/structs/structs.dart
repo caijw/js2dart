@@ -48,19 +48,19 @@ class Coordinate extends ffi.Struct<Coordinate> {
 }
 
 // Example of a complex struct (contains strings and other structs)
-class Place extends ffi.Struct<Place> {
-  @ffi.Pointer()
-  ffi.Pointer<Utf8> name;
+// class Place extends ffi.Struct<Place> {
+//   @ffi.Pointer()
+//   ffi.Pointer<Utf8> name;
 
-  @ffi.Pointer()
-  ffi.Pointer<Coordinate> coordinate;
+//   @ffi.Pointer()
+//   ffi.Pointer<Coordinate> coordinate;
 
-  factory Place.allocate(
-          ffi.Pointer<Utf8> name, ffi.Pointer<Coordinate> coordinate) =>
-      ffi.Pointer<Place>.allocate().load<Place>()
-        ..name = name
-        ..coordinate = coordinate;
-}
+//   factory Place.allocate(
+//           ffi.Pointer<Utf8> name, ffi.Pointer<Coordinate> coordinate) =>
+//       ffi.Pointer<Place>.allocate().load<Place>()
+//         ..name = name
+//         ..coordinate = coordinate;
+// }
 
 // C string pointer return function - char *hello_world();
 // There's no need for two typedefs here, as both the
@@ -79,10 +79,10 @@ typedef CreateCoordinate = ffi.Pointer<Coordinate> Function(
     double latitude, double longitude);
 
 // C struct pointer return function - struct Place *create_place(char *name, double latitude, double longitude);
-typedef create_place_func = ffi.Pointer<Place> Function(
-    ffi.Pointer<Utf8> name, ffi.Double latitude, ffi.Double longitude);
-typedef CreatePlace = ffi.Pointer<Place> Function(
-    ffi.Pointer<Utf8> name, double latitude, double longitude);
+// typedef create_place_func = ffi.Pointer<Place> Function(
+//     ffi.Pointer<Utf8> name, ffi.Double latitude, ffi.Double longitude);
+// typedef CreatePlace = ffi.Pointer<Place> Function(
+//     ffi.Pointer<Utf8> name, double latitude, double longitude);
 
 main() {
   final dylib = ffi.DynamicLibrary.open('structs.dylib');
@@ -100,21 +100,21 @@ main() {
   final reversedMessage = Utf8.fromUtf8(reverse(Utf8.toUtf8('backwards'), 9));
   print('$reversedMessage');
 
-  final createCoordinatePointer = dylib
-      .lookup<ffi.NativeFunction<create_coordinate_func>>('create_coordinate');
-  final createCoordinate =
-      createCoordinatePointer.asFunction<CreateCoordinate>();
-  final coordinatePointer = createCoordinate(1.0, 2.0);
-  final coordinate = coordinatePointer.load();
-  print('Coordinate: ${coordinate.latitude}, ${coordinate.longitude}');
+  // final createCoordinatePointer = dylib
+  //     .lookup<ffi.NativeFunction<create_coordinate_func>>('create_coordinate');
+  // final createCoordinate =
+  //     createCoordinatePointer.asFunction<CreateCoordinate>();
+  // final coordinatePointer = createCoordinate(1.0, 2.0);
+  // final coordinate = coordinatePointer.load();
+  // print('Coordinate: ${coordinate.latitude}, ${coordinate.longitude}');
 
-  final createPlacePointer =
-      dylib.lookup<ffi.NativeFunction<create_place_func>>('create_place');
-  final createPlace = createPlacePointer.asFunction<CreatePlace>();
-  final placePointer = createPlace(messagePointer, 3.5, 4.6);
-  final place = placePointer.load<Place>();
-  final placeName = Utf8.fromUtf8(place.name);
-  final placeCoordinate = place.coordinate.load<Coordinate>();
-  print(
-      'Place is called $placeName at ${placeCoordinate.latitude}, ${placeCoordinate.longitude}');
+  // final createPlacePointer =
+  //     dylib.lookup<ffi.NativeFunction<create_place_func>>('create_place');
+  // final createPlace = createPlacePointer.asFunction<CreatePlace>();
+  // final placePointer = createPlace(messagePointer, 3.5, 4.6);
+  // final place = placePointer.load<Place>();
+  // final placeName = Utf8.fromUtf8(place.name);
+  // final placeCoordinate = place.coordinate.load<Coordinate>();
+  // print(
+  //     'Place is called $placeName at ${placeCoordinate.latitude}, ${placeCoordinate.longitude}');
 }

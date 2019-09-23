@@ -39,7 +39,9 @@ char *hello_world()
 {
     return "Hello World";
 }
-
+/**
+ * 翻转字符串，返回翻转后的结果
+ */
 char *reverse(char *str, int length)
 {
     char *reversed_str = (char *)malloc((length + 1) * sizeof(char));
